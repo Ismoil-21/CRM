@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: edumanage-crm
+    runtime: node
+    rootDir: backend
+    buildCommand: bash build.sh
+    startCommand: node server.js
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false

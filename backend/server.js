@@ -5,444 +5,541 @@
  * Ishga tushirish: cd backend && npm install && npm start
  */
 
-import express from 'express'
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
-import { readFileSync, existsSync } from 'fs'
-import { MongoClient, ObjectId } from 'mongodb'
+import express from "express";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+import { readFileSync, existsSync } from "fs";
+import { MongoClient, ObjectId } from "mongodb";
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // ─── .env o'qish ──────────────────────────────────────────────────────────────
-const envPath = join(__dirname, '.env')
+const envPath = join(__dirname, ".env");
 if (existsSync(envPath)) {
-  for (const line of readFileSync(envPath, 'utf8').split('\n')) {
-    const t = line.trim()
-    if (!t || t.startsWith('#')) continue
-    const eq = t.indexOf('=')
-    if (eq < 0) continue
-    const k = t.slice(0, eq).trim()
-    const v = t.slice(eq + 1).trim()
-    if (k && !(k in process.env)) process.env[k] = v
+  for (const line of readFileSync(envPath, "utf8").split("\n")) {
+    const t = line.trim();
+    if (!t || t.startsWith("#")) continue;
+    const eq = t.indexOf("=");
+    if (eq < 0) continue;
+    const k = t.slice(0, eq).trim();
+    const v = t.slice(eq + 1).trim();
+    if (k && !(k in process.env)) process.env[k] = v;
   }
 }
 
-const app = express()
-app.use(express.json({ limit: '10mb' }))
+const app = express();
+app.use(express.json({ limit: "10mb" }));
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-  if (req.method === 'OPTIONS') return res.sendStatus(204)
-  next()
-})
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type,Authorization");
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
 
 // ─── MongoDB Ulanish ──────────────────────────────────────────────────────────
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/CRM'
-let db = null
-let mongoClient = null
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost:27017/CRM";
+let db = null;
+let mongoClient = null;
 
 async function connectMongo() {
   try {
-    mongoClient = new MongoClient(MONGODB_URI)
-    await mongoClient.connect()
-    db = mongoClient.db()
-    console.log('✅ MongoDB ulandi:', db.databaseName)
+    mongoClient = new MongoClient(MONGODB_URI);
+    await mongoClient.connect();
+    db = mongoClient.db();
+    console.log("✅ MongoDB ulandi:", db.databaseName);
 
     // Indekslar yaratish
-    await db.collection('kv').createIndex({ key: 1 }, { unique: true })
-    await db.collection('users').createIndex({ login: 1 }, { unique: true })
+    await db.collection("kv").createIndex({ key: 1 }, { unique: true });
+    await db.collection("users").createIndex({ login: 1 }, { unique: true });
 
     // Mavjud JSON ma'lumotlarni MongoDB ga ko'chirish
-    await migrateJsonToMongo()
+    await migrateJsonToMongo();
 
-    return true
+    return true;
   } catch (err) {
-    console.error('❌ MongoDB ulanmadi:', err.message)
-    return false
+    console.error("❌ MongoDB ulanmadi:", err.message);
+    return false;
   }
 }
 
 // ─── JSON → MongoDB Migration ─────────────────────────────────────────────────
 async function migrateJsonToMongo() {
   // crm-data.json migratsiyasi
-  const dataFile = join(__dirname, 'crm-data.json')
+  const dataFile = join(__dirname, "crm-data.json");
   if (existsSync(dataFile)) {
     try {
-      const data = JSON.parse(readFileSync(dataFile, 'utf8'))
-      const existing = await db.collection('crm_data').findOne({ _type: 'main' })
+      const data = JSON.parse(readFileSync(dataFile, "utf8"));
+      const existing = await db
+        .collection("crm_data")
+        .findOne({ _type: "main" });
       if (!existing) {
-        await db.collection('crm_data').insertOne({ _type: 'main', ...data, _migratedAt: new Date() })
-        console.log('📦 crm-data.json → MongoDB (crm_data)')
+        await db
+          .collection("crm_data")
+          .insertOne({ _type: "main", ...data, _migratedAt: new Date() });
+        console.log("📦 crm-data.json → MongoDB (crm_data)");
       }
-    } catch (e) { console.log('crm-data.json migration skip:', e.message) }
+    } catch (e) {
+      console.log("crm-data.json migration skip:", e.message);
+    }
   }
 
   // crm-users.json migratsiyasi
-  const usersFile = join(__dirname, 'crm-users.json')
+  const usersFile = join(__dirname, "crm-users.json");
   if (existsSync(usersFile)) {
     try {
-      const usersData = JSON.parse(readFileSync(usersFile, 'utf8'))
-      const existing = await db.collection('users').countDocuments()
+      const usersData = JSON.parse(readFileSync(usersFile, "utf8"));
+      const existing = await db.collection("users").countDocuments();
       if (existing === 0) {
-        const allUsers = []
+        const allUsers = [];
         if (Array.isArray(usersData.mentors)) {
-          for (const u of usersData.mentors) allUsers.push({ ...u, _role: 'mentor' })
+          for (const u of usersData.mentors)
+            allUsers.push({ ...u, _role: "mentor" });
         }
         if (Array.isArray(usersData.students)) {
-          for (const u of usersData.students) allUsers.push({ ...u, _role: 'student' })
+          for (const u of usersData.students)
+            allUsers.push({ ...u, _role: "student" });
         }
         if (allUsers.length > 0) {
-          await db.collection('users').insertMany(allUsers)
-          console.log(`📦 crm-users.json → MongoDB (${allUsers.length} users)`)
+          await db.collection("users").insertMany(allUsers);
+          console.log(`📦 crm-users.json → MongoDB (${allUsers.length} users)`);
         }
       }
-    } catch (e) { console.log('crm-users.json migration skip:', e.message) }
+    } catch (e) {
+      console.log("crm-users.json migration skip:", e.message);
+    }
   }
 
   // crm-coins.json migratsiyasi
-  const coinsFile = join(__dirname, 'crm-coins.json')
+  const coinsFile = join(__dirname, "crm-coins.json");
   if (existsSync(coinsFile)) {
     try {
-      const coinsData = JSON.parse(readFileSync(coinsFile, 'utf8'))
-      const existing = await db.collection('coins').findOne({ _type: 'main' })
+      const coinsData = JSON.parse(readFileSync(coinsFile, "utf8"));
+      const existing = await db.collection("coins").findOne({ _type: "main" });
       if (!existing) {
-        await db.collection('coins').insertOne({ _type: 'main', ...coinsData, _migratedAt: new Date() })
-        console.log('📦 crm-coins.json → MongoDB (coins)')
+        await db
+          .collection("coins")
+          .insertOne({ _type: "main", ...coinsData, _migratedAt: new Date() });
+        console.log("📦 crm-coins.json → MongoDB (coins)");
       }
-    } catch (e) { console.log('crm-coins.json migration skip:', e.message) }
+    } catch (e) {
+      console.log("crm-coins.json migration skip:", e.message);
+    }
   }
 
   // crm-kv.json migratsiyasi
-  const kvFile = join(__dirname, 'crm-kv.json')
+  const kvFile = join(__dirname, "crm-kv.json");
   if (existsSync(kvFile)) {
     try {
-      const kvData = JSON.parse(readFileSync(kvFile, 'utf8'))
-      const existing = await db.collection('kv').countDocuments()
+      const kvData = JSON.parse(readFileSync(kvFile, "utf8"));
+      const existing = await db.collection("kv").countDocuments();
       if (existing === 0 && Object.keys(kvData).length > 0) {
-        const docs = Object.entries(kvData).map(([key, value]) => ({ key, value: String(value) }))
-        await db.collection('kv').insertMany(docs)
-        console.log(`📦 crm-kv.json → MongoDB (${docs.length} keys)`)
+        const docs = Object.entries(kvData).map(([key, value]) => ({
+          key,
+          value: String(value),
+        }));
+        await db.collection("kv").insertMany(docs);
+        console.log(`📦 crm-kv.json → MongoDB (${docs.length} keys)`);
       }
-    } catch (e) { console.log('crm-kv.json migration skip:', e.message) }
+    } catch (e) {
+      console.log("crm-kv.json migration skip:", e.message);
+    }
   }
 }
 
 // ─── DB Helper ────────────────────────────────────────────────────────────────
 function getDb() {
-  if (!db) throw new Error('MongoDB ulanmagan')
-  return db
+  if (!db) throw new Error("MongoDB ulanmagan");
+  return db;
 }
 
 // ─── Users API ────────────────────────────────────────────────────────────────
-app.get('/api/users', async (_req, res) => {
+app.get("/api/users", async (_req, res) => {
   try {
-    const allUsers = await getDb().collection('users').find({}).toArray()
-    const mentors = allUsers.filter(u => u._role === 'mentor').map(({ _id, _role, ...u }) => u)
-    const students = allUsers.filter(u => u._role === 'student').map(({ _id, _role, ...u }) => u)
-    res.json({ ok: true, mentors, students })
+    const allUsers = await getDb().collection("users").find({}).toArray();
+    const mentors = allUsers
+      .filter((u) => u._role === "mentor")
+      .map(({ _id, _role, ...u }) => u);
+    const students = allUsers
+      .filter((u) => u._role === "student")
+      .map(({ _id, _role, ...u }) => u);
+    res.json({ ok: true, mentors, students });
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message })
+    res.status(500).json({ ok: false, error: e.message });
   }
-})
+});
 
-app.post('/api/users/save', async (req, res) => {
+app.post("/api/users/save", async (req, res) => {
   try {
-    const { mentors, students } = req.body || {}
+    const { mentors, students } = req.body || {};
     if (!Array.isArray(mentors) && !Array.isArray(students))
-      return res.status(400).json({ ok: false, error: 'mentors yoki students massivi kerak' })
+      return res
+        .status(400)
+        .json({ ok: false, error: "mentors yoki students massivi kerak" });
 
-    const col = getDb().collection('users')
+    const col = getDb().collection("users");
 
     if (Array.isArray(mentors)) {
-      await col.deleteMany({ _role: 'mentor' })
+      await col.deleteMany({ _role: "mentor" });
       if (mentors.length > 0)
-        await col.insertMany(mentors.map(u => ({ ...u, _role: 'mentor' })))
+        await col.insertMany(mentors.map((u) => ({ ...u, _role: "mentor" })));
     }
     if (Array.isArray(students)) {
-      await col.deleteMany({ _role: 'student' })
+      await col.deleteMany({ _role: "student" });
       if (students.length > 0)
-        await col.insertMany(students.map(u => ({ ...u, _role: 'student' })))
+        await col.insertMany(students.map((u) => ({ ...u, _role: "student" })));
     }
-    res.json({ ok: true })
+    res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message })
+    res.status(500).json({ ok: false, error: e.message });
   }
-})
+});
 
 // ─── CRM Ma'lumotlari API ─────────────────────────────────────────────────────
-app.get('/api/data', async (_req, res) => {
+app.get("/api/data", async (_req, res) => {
   try {
-    const doc = await getDb().collection('crm_data').findOne({ _type: 'main' })
+    const doc = await getDb().collection("crm_data").findOne({ _type: "main" });
     if (doc) {
-      const { _id, _type, _migratedAt, ...data } = doc
-      res.json({ ok: true, data })
+      const { _id, _type, _migratedAt, ...data } = doc;
+      res.json({ ok: true, data });
     } else {
-      res.json({ ok: false, data: null })
+      res.json({ ok: false, data: null });
     }
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message })
+    res.status(500).json({ ok: false, error: e.message });
   }
-})
+});
 
-app.post('/api/data', async (req, res) => {
+app.post("/api/data", async (req, res) => {
   try {
-    const payload = req.body
-    if (!payload || typeof payload !== 'object')
-      return res.status(400).json({ ok: false, error: 'data obyekti kerak' })
+    const payload = req.body;
+    if (!payload || typeof payload !== "object")
+      return res.status(400).json({ ok: false, error: "data obyekti kerak" });
 
-    await getDb().collection('crm_data').updateOne(
-      { _type: 'main' },
-      { $set: { ...payload, _type: 'main', _updatedAt: new Date() } },
-      { upsert: true }
-    )
-    res.json({ ok: true })
+    await getDb()
+      .collection("crm_data")
+      .updateOne(
+        { _type: "main" },
+        { $set: { ...payload, _type: "main", _updatedAt: new Date() } },
+        { upsert: true },
+      );
+    res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message })
+    res.status(500).json({ ok: false, error: e.message });
   }
-})
+});
 
 // ─── Coin Tizimi API ──────────────────────────────────────────────────────────
-app.get('/api/coins', async (_req, res) => {
+app.get("/api/coins", async (_req, res) => {
   try {
     // Birinchi: KV dan o'qiymiz (frontend shim shu yerga yozadi)
-    const COIN_KEY = 'edu_mentor_coins_v1'
-    const SHOP_KEY = 'edu_shop_v1'
-    const PURCHASE_KEY = 'edu_purchases_v1'
+    const COIN_KEY = "edu_mentor_coins_v1";
+    const SHOP_KEY = "edu_shop_v1";
+    const PURCHASE_KEY = "edu_purchases_v1";
 
-    const kvDocs = await getDb().collection('kv').find({
-      key: { $in: [COIN_KEY, SHOP_KEY, PURCHASE_KEY] }
-    }).toArray()
+    const kvDocs = await getDb()
+      .collection("kv")
+      .find({
+        key: { $in: [COIN_KEY, SHOP_KEY, PURCHASE_KEY] },
+      })
+      .toArray();
 
-    const kvMap = {}
-    for (const doc of kvDocs) kvMap[doc.key] = doc.value
+    const kvMap = {};
+    for (const doc of kvDocs) kvMap[doc.key] = doc.value;
 
-    let coins = {}, shop = [], purchases = []
+    let coins = {},
+      shop = [],
+      purchases = [];
 
     if (kvMap[COIN_KEY]) {
-      try { coins = JSON.parse(kvMap[COIN_KEY]) } catch(e) {}
+      try {
+        coins = JSON.parse(kvMap[COIN_KEY]);
+      } catch (e) {}
     }
     if (kvMap[SHOP_KEY]) {
-      try { shop = JSON.parse(kvMap[SHOP_KEY]) } catch(e) {}
+      try {
+        shop = JSON.parse(kvMap[SHOP_KEY]);
+      } catch (e) {}
     }
     if (kvMap[PURCHASE_KEY]) {
-      try { purchases = JSON.parse(kvMap[PURCHASE_KEY]) } catch(e) {}
+      try {
+        purchases = JSON.parse(kvMap[PURCHASE_KEY]);
+      } catch (e) {}
     }
 
     // KV bo'sh bo'lsa fallback: dedicated coins collection
     if (!Object.keys(coins).length) {
-      const doc = await getDb().collection('coins').findOne({ _type: 'main' })
+      const doc = await getDb().collection("coins").findOne({ _type: "main" });
       if (doc) {
-        const { _id, _type, _migratedAt, _updatedAt, ...rest } = doc
-        if (rest.coins) coins = rest.coins
-        if (Array.isArray(rest.shop) && rest.shop.length) shop = rest.shop
-        if (Array.isArray(rest.purchases) && rest.purchases.length) purchases = rest.purchases
+        const { _id, _type, _migratedAt, _updatedAt, ...rest } = doc;
+        if (rest.coins) coins = rest.coins;
+        if (Array.isArray(rest.shop) && rest.shop.length) shop = rest.shop;
+        if (Array.isArray(rest.purchases) && rest.purchases.length)
+          purchases = rest.purchases;
       }
     }
 
-    res.json({ ok: true, coins, shop, purchases })
+    res.json({ ok: true, coins, shop, purchases });
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message })
+    res.status(500).json({ ok: false, error: e.message });
   }
-})
+});
 
-app.post('/api/coins', async (req, res) => {
+app.post("/api/coins", async (req, res) => {
   try {
-    const { coins, shop, purchases } = req.body || {}
-    const update = { _type: 'main', _updatedAt: new Date() }
-    if (coins && typeof coins === 'object') update.coins = coins
-    if (Array.isArray(shop)) update.shop = shop
-    if (Array.isArray(purchases)) update.purchases = purchases
+    const { coins, shop, purchases } = req.body || {};
+    const update = { _type: "main", _updatedAt: new Date() };
+    if (coins && typeof coins === "object") update.coins = coins;
+    if (Array.isArray(shop)) update.shop = shop;
+    if (Array.isArray(purchases)) update.purchases = purchases;
 
-    await getDb().collection('coins').updateOne(
-      { _type: 'main' },
-      { $set: update },
-      { upsert: true }
-    )
-    res.json({ ok: true })
+    await getDb()
+      .collection("coins")
+      .updateOne({ _type: "main" }, { $set: update }, { upsert: true });
+    res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message })
+    res.status(500).json({ ok: false, error: e.message });
   }
-})
+});
 
-app.post('/api/coins/send-mentor', async (req, res) => {
+app.post("/api/coins/send-mentor", async (req, res) => {
   try {
-    const { mentorName, amount } = req.body || {}
+    const { mentorName, amount } = req.body || {};
     if (!mentorName || !amount || amount <= 0)
-      return res.status(400).json({ ok: false, error: 'mentorName va amount kerak' })
+      return res
+        .status(400)
+        .json({ ok: false, error: "mentorName va amount kerak" });
 
-    const doc = await getDb().collection('coins').findOne({ _type: 'main' }) || { coins: {} }
-    const updatedCoins = { ...(doc.coins || {}), ['m_' + mentorName]: amount }
+    const doc = (await getDb()
+      .collection("coins")
+      .findOne({ _type: "main" })) || { coins: {} };
+    const updatedCoins = { ...(doc.coins || {}), ["m_" + mentorName]: amount };
 
-    await getDb().collection('coins').updateOne(
-      { _type: 'main' },
-      { $set: { coins: updatedCoins, _updatedAt: new Date() } },
-      { upsert: true }
-    )
-    res.json({ ok: true, coins: updatedCoins })
+    await getDb()
+      .collection("coins")
+      .updateOne(
+        { _type: "main" },
+        { $set: { coins: updatedCoins, _updatedAt: new Date() } },
+        { upsert: true },
+      );
+    res.json({ ok: true, coins: updatedCoins });
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message })
+    res.status(500).json({ ok: false, error: e.message });
   }
-})
+});
 
 // ─── Universal KV Store API ───────────────────────────────────────────────────
-app.get('/api/kv', async (_req, res) => {
+app.get("/api/kv", async (_req, res) => {
   try {
-    const docs = await getDb().collection('kv').find({}).toArray()
-    const data = {}
-    for (const doc of docs) data[doc.key] = doc.value
-    res.json({ ok: true, data })
+    const docs = await getDb().collection("kv").find({}).toArray();
+    const data = {};
+    for (const doc of docs) data[doc.key] = doc.value;
+    res.json({ ok: true, data });
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message })
+    res.status(500).json({ ok: false, error: e.message });
   }
-})
+});
 
-app.post('/api/kv', async (req, res) => {
+app.post("/api/kv", async (req, res) => {
   try {
-    const { key, value } = req.body || {}
-    if (typeof key !== 'string' || !key)
-      return res.status(400).json({ ok: false, error: 'key kerak' })
+    const { key, value } = req.body || {};
+    if (typeof key !== "string" || !key)
+      return res.status(400).json({ ok: false, error: "key kerak" });
 
     if (value === null || value === undefined) {
-      await getDb().collection('kv').deleteOne({ key })
+      await getDb().collection("kv").deleteOne({ key });
     } else {
-      await getDb().collection('kv').updateOne(
-        { key },
-        { $set: { key, value: String(value), _updatedAt: new Date() } },
-        { upsert: true }
-      )
+      await getDb()
+        .collection("kv")
+        .updateOne(
+          { key },
+          { $set: { key, value: String(value), _updatedAt: new Date() } },
+          { upsert: true },
+        );
     }
-    res.json({ ok: true })
+    res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message })
+    res.status(500).json({ ok: false, error: e.message });
   }
-})
+});
 
-app.post('/api/kv/bulk', async (req, res) => {
+app.post("/api/kv/bulk", async (req, res) => {
   try {
-    const { pairs } = req.body || {}
+    const { pairs } = req.body || {};
     if (!Array.isArray(pairs))
-      return res.status(400).json({ ok: false, error: 'pairs massivi kerak' })
+      return res.status(400).json({ ok: false, error: "pairs massivi kerak" });
 
     const ops = pairs.map(({ key, value }) => ({
       updateOne: {
         filter: { key },
         update: { $set: { key, value: String(value), _updatedAt: new Date() } },
-        upsert: true
-      }
-    }))
-    if (ops.length > 0) await getDb().collection('kv').bulkWrite(ops)
-    res.json({ ok: true })
+        upsert: true,
+      },
+    }));
+    if (ops.length > 0) await getDb().collection("kv").bulkWrite(ops);
+    res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message })
+    res.status(500).json({ ok: false, error: e.message });
   }
-})
+});
 
-app.post('/api/kv/clear', async (_req, res) => {
+app.post("/api/kv/clear", async (_req, res) => {
   try {
-    await getDb().collection('kv').deleteMany({})
-    res.json({ ok: true })
+    await getDb().collection("kv").deleteMany({});
+    res.json({ ok: true });
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message })
+    res.status(500).json({ ok: false, error: e.message });
   }
-})
+});
 
 // ─── MongoDB Health Check ─────────────────────────────────────────────────────
-app.get('/api/health', async (_req, res) => {
-  const tgOk = !!process.env.TELEGRAM_BOT_TOKEN && !process.env.TELEGRAM_BOT_TOKEN.includes('your_')
-  const aiOk = !!process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_API_KEY.includes('your_')
-  let mongoOk = false
-  let mongoInfo = {}
+app.get("/api/health", async (_req, res) => {
+  const tgOk =
+    !!process.env.TELEGRAM_BOT_TOKEN &&
+    !process.env.TELEGRAM_BOT_TOKEN.includes("your_");
+  const aiOk =
+    !!process.env.ANTHROPIC_API_KEY &&
+    !process.env.ANTHROPIC_API_KEY.includes("your_");
+  let mongoOk = false;
+  let mongoInfo = {};
   try {
-    await db.admin().ping()
-    const stats = await db.stats()
-    mongoOk = true
-    mongoInfo = { collections: stats.collections, dataSize: stats.dataSize }
+    await db.admin().ping();
+    const stats = await db.stats();
+    mongoOk = true;
+    mongoInfo = { collections: stats.collections, dataSize: stats.dataSize };
   } catch (e) {}
 
   res.json({
     ok: true,
-    service: 'EduManage CRM',
-    version: '3.0.0-mongodb',
-    telegram: tgOk ? '✅ sozlangan' : '⚠️ sozlanmagan',
-    anthropic: aiOk ? '✅ Anthropic' : '➡️ Pollinations (bepul)',
-    mongodb: mongoOk ? `✅ ulangan (${db.databaseName})` : '❌ ulanmagan',
-    mongoInfo
-  })
-})
+    service: "EduManage CRM",
+    version: "3.0.0-mongodb",
+    telegram: tgOk ? "✅ sozlangan" : "⚠️ sozlanmagan",
+    anthropic: aiOk ? "✅ Anthropic" : "➡️ Pollinations (bepul)",
+    mongodb: mongoOk ? `✅ ulangan (${db.databaseName})` : "❌ ulanmagan",
+    mongoInfo,
+  });
+});
 
 // ─── MongoDB Stats ────────────────────────────────────────────────────────────
-app.get('/api/db/stats', async (_req, res) => {
+app.get("/api/db/stats", async (_req, res) => {
   try {
-    const cols = ['crm_data', 'users', 'coins', 'kv']
-    const stats = {}
+    const cols = ["crm_data", "users", "coins", "kv"];
+    const stats = {};
     for (const col of cols) {
-      stats[col] = await getDb().collection(col).countDocuments()
+      stats[col] = await getDb().collection(col).countDocuments();
     }
-    res.json({ ok: true, stats })
+    res.json({ ok: true, stats });
   } catch (e) {
-    res.status(500).json({ ok: false, error: e.message })
+    res.status(500).json({ ok: false, error: e.message });
   }
-})
+});
 
 // ─── Telegram Davomat ─────────────────────────────────────────────────────────
-app.post('/api/send-attendance', async (req, res) => {
-  const token = process.env.TELEGRAM_BOT_TOKEN
-  if (!token || token.includes('your_'))
-    return res.status(500).json({ ok: false, error: 'TELEGRAM_BOT_TOKEN sozlanmagan' })
-  const { chatId, groupName, date, rows } = req.body || {}
+app.post("/api/send-attendance", async (req, res) => {
+  const token = process.env.TELEGRAM_BOT_TOKEN;
+  if (!token || token.includes("your_"))
+    return res
+      .status(500)
+      .json({ ok: false, error: "TELEGRAM_BOT_TOKEN sozlanmagan" });
+  const { chatId, groupName, date, rows } = req.body || {};
   if (!chatId || !groupName || !date || !Array.isArray(rows))
-    return res.status(400).json({ ok: false, error: 'Majburiy: chatId, groupName, date, rows[]' })
-  const lines = rows.map((r, i) => {
-    const icon = r.status==='K'?'✅':r.status==='Y'?'❌':r.status==='S'?'🟡':'⚪️'
-    return `${i+1}. ${r.fullName} ${icon}`
-  }).join('\n')
-  const time = new Date().toLocaleTimeString('uz-UZ', { hour:'2-digit', minute:'2-digit' })
-  const text = `📊 *Davomat hisoboti*\n👥 Guruh: *${groupName}*\n📅 Sana: *${date}*\n⏱️ Vaqt: *${time}*\n\n${lines}\n\nBelgilar: ✅ Keldi · ❌ Yo'q · 🟡 Sababli · ⚪️ Belgilanmagan`
+    return res
+      .status(400)
+      .json({ ok: false, error: "Majburiy: chatId, groupName, date, rows[]" });
+  const lines = rows
+    .map((r, i) => {
+      const icon =
+        r.status === "K"
+          ? "✅"
+          : r.status === "Y"
+            ? "❌"
+            : r.status === "S"
+              ? "🟡"
+              : "⚪️";
+      return `${i + 1}. ${r.fullName} ${icon}`;
+    })
+    .join("\n");
+  const time = new Date().toLocaleTimeString("uz-UZ", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const text = `📊 *Davomat hisoboti*\n👥 Guruh: *${groupName}*\n📅 Sana: *${date}*\n⏱️ Vaqt: *${time}*\n\n${lines}\n\nBelgilar: ✅ Keldi · ❌ Yo'q · 🟡 Sababli · ⚪️ Belgilanmagan`;
   try {
     const r = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'Markdown' }),
-    })
-    const data = await r.json().catch(() => ({}))
-    if (!r.ok || !data.ok) return res.status(502).json({ ok: false, error: data.description || `HTTP ${r.status}` })
-    return res.json({ ok: true })
-  } catch (e) { return res.status(502).json({ ok: false, error: e?.message }) }
-})
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text, parse_mode: "Markdown" }),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok || !data.ok)
+      return res
+        .status(502)
+        .json({ ok: false, error: data.description || `HTTP ${r.status}` });
+    return res.json({ ok: true });
+  } catch (e) {
+    return res.status(502).json({ ok: false, error: e?.message });
+  }
+});
 
 // ─── AI Yordamchi ─────────────────────────────────────────────────────────────
-app.post('/api/ai-chat', async (req, res) => {
-  const { messages, system } = req.body || {}
-  if (!Array.isArray(messages)) return res.status(400).json({ ok: false, error: 'messages massivi kerak' })
-  const key = process.env.ANTHROPIC_API_KEY
-  if (key && !key.includes('your_')) {
+app.post("/api/ai-chat", async (req, res) => {
+  const { messages, system } = req.body || {};
+  if (!Array.isArray(messages))
+    return res.status(400).json({ ok: false, error: "messages massivi kerak" });
+  const key = process.env.ANTHROPIC_API_KEY;
+  if (key && !key.includes("your_")) {
     try {
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 1000, system: system||'', messages }),
-      })
-      const data = await r.json().catch(() => ({}))
-      if (r.ok) return res.json({ ok: true, text: data.content?.[0]?.text || '' })
+      const r = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1000,
+          system: system || "",
+          messages,
+        }),
+      });
+      const data = await r.json().catch(() => ({}));
+      if (r.ok)
+        return res.json({ ok: true, text: data.content?.[0]?.text || "" });
     } catch (e) {}
   }
   try {
-    const msgs = []
-    if (system) msgs.push({ role: 'system', content: system })
-    for (const m of messages) msgs.push({ role: m.role==='assistant'?'assistant':'user', content: String(m.content||'') })
-    const r = await fetch('https://text.pollinations.ai/openai', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model: 'openai', messages: msgs, private: true }),
-    })
-    const raw = await r.text()
-    if (!r.ok) return res.status(502).json({ ok: false, error: `AI ishlamayapti (${r.status})` })
-    let text = ''
-    try { const p = JSON.parse(raw); text = p.choices?.[0]?.message?.content || p.text || raw } catch { text = raw }
-    return res.json({ ok: true, text })
-  } catch (e) { return res.status(502).json({ ok: false, error: "AI'ga ulanib bo'lmadi" }) }
-})
+    const msgs = [];
+    if (system) msgs.push({ role: "system", content: system });
+    for (const m of messages)
+      msgs.push({
+        role: m.role === "assistant" ? "assistant" : "user",
+        content: String(m.content || ""),
+      });
+    const r = await fetch("https://text.pollinations.ai/openai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "openai", messages: msgs, private: true }),
+    });
+    const raw = await r.text();
+    if (!r.ok)
+      return res
+        .status(502)
+        .json({ ok: false, error: `AI ishlamayapti (${r.status})` });
+    let text = "";
+    try {
+      const p = JSON.parse(raw);
+      text = p.choices?.[0]?.message?.content || p.text || raw;
+    } catch {
+      text = raw;
+    }
+    return res.json({ ok: true, text });
+  } catch (e) {
+    return res.status(502).json({ ok: false, error: "AI'ga ulanib bo'lmadi" });
+  }
+});
 
 // ─── Frontend static — Render uchun BITTA PORT, path orqali ajratilgan ─────────
 //
@@ -455,15 +552,15 @@ app.post('/api/ai-chat', async (req, res) => {
 // Mahalliy ishlatishda PORT=3000 — hammasi shu portda.
 // Render.com da PORT avtomatik beriladi.
 
-const PORT = parseInt(process.env.PORT || '3000')
+const PORT = parseInt(process.env.PORT || "3000");
 
 // ── Static fayllar yo'llari ─────────────────────────────────────────────────
-const adminPublic  = join(__dirname, '..', 'admin',   'public')
-const mentorPublic = join(__dirname, '..', 'mentor',  'public')
-const studentPublic= join(__dirname, '..', 'student', 'public')
-const adminDist    = join(__dirname, '..', 'admin',   'dist')
-const mentorDist   = join(__dirname, '..', 'mentor',  'dist')
-const studentDist  = join(__dirname, '..', 'student', 'dist')
+const adminPublic = join(__dirname, "..", "admin", "public");
+const mentorPublic = join(__dirname, "..", "mentor", "public");
+const studentPublic = join(__dirname, "..", "student", "public");
+const adminDist = join(__dirname, "..", "admin", "dist");
+const mentorDist = join(__dirname, "..", "mentor", "dist");
+const studentDist = join(__dirname, "..", "student", "dist");
 
 // ── Portaller: /admin, /mentor, /student ────────────────────────────────────
 // Vite build qilinsa dist/ papkasi ishlatiladi.
@@ -471,43 +568,49 @@ const studentDist  = join(__dirname, '..', 'student', 'dist')
 // Agar dist/ yo'q bo'lsa — public/ dan ishlaydi.
 
 const portals = [
-  { prefix: '/admin',   dist: adminDist,   pub: adminPublic  },
-  { prefix: '/mentor',  dist: mentorDist,  pub: mentorPublic },
-  { prefix: '/student', dist: studentDist, pub: studentPublic },
-]
+  { prefix: "/admin", dist: adminDist, pub: adminPublic },
+  { prefix: "/mentor", dist: mentorDist, pub: mentorPublic },
+  { prefix: "/student", dist: studentDist, pub: studentPublic },
+];
 
 for (const { prefix, dist, pub } of portals) {
-  const root = existsSync(dist) ? dist : pub
+  // dist/ bor bo'lsa ishlatamiz, yo'q bo'lsa public/ dan
+  const root = existsSync(dist) ? dist : existsSync(pub) ? pub : null;
 
-  // Static fayllar: dist/ yoki public/ dan
-  app.use(prefix, express.static(root, { index: false }))
-
-  // dist/ bo'lmasa, public/core dan ham serve qilish
-  if (!existsSync(dist)) {
-    const coreDir = join(pub, 'core')
-    if (existsSync(coreDir)) {
-      app.use(prefix + '/core', express.static(coreDir))
-    }
-    // edu-styles.css va boshqa fayllar
-    app.use(prefix, express.static(pub))
+  if (!root) {
+    app.get(prefix, (_req, res) =>
+      res.status(503).send("Portal build qilinmagan"),
+    );
+    app.get(prefix + "/*", (_req, res) =>
+      res.status(503).send("Portal build qilinmagan"),
+    );
+    continue;
   }
 
-  // SPA fallback — hamma route → index.html
-  const indexFile = join(root, 'index.html')
+  // Static fayllar
+  app.use(prefix, express.static(root, { index: false }));
+
+  // dist/ yo'q bo'lsa public/core ni ham serve qil
+  if (!existsSync(dist) && existsSync(join(pub, "core"))) {
+    app.use(prefix + "/core", express.static(join(pub, "core")));
+  }
+
+  // SPA fallback — index.html
+  const indexFile = join(root, "index.html");
   app.get(prefix, (_req, res) => {
-    if (existsSync(indexFile)) res.sendFile(indexFile)
-    else res.status(404).send('Portal topilmadi')
-  })
-  app.get(prefix + '/*', (req, res) => {
-    // Static fayl bo'lsa — express.static allaqachon javob bergan
-    // Aks holda SPA uchun index.html qaytaramiz
-    if (existsSync(indexFile)) res.sendFile(indexFile)
-    else res.status(404).send('Portal topilmadi')
-  })
+    existsSync(indexFile)
+      ? res.sendFile(indexFile)
+      : res.status(404).send("Portal topilmadi");
+  });
+  app.get(prefix + "/*", (_req, res) => {
+    existsSync(indexFile)
+      ? res.sendFile(indexFile)
+      : res.status(404).send("Portal topilmadi");
+  });
 }
 
 // ── Bosh sahifa — portallar ro'yxati ────────────────────────────────────────
-app.get('/', (_req, res) => {
+app.get("/", (_req, res) => {
   res.send(`<!DOCTYPE html>
 <html lang="uz">
 <head>
@@ -551,27 +654,33 @@ app.get('/', (_req, res) => {
   </div>
 </div>
 </body>
-</html>`)
-})
+</html>`);
+});
 
 // ─── Serverni ishga tushirish ─────────────────────────────────────────────────
 async function start() {
-  await connectMongo()
+  await connectMongo();
 
-  app.listen(PORT, '0.0.0.0', () => {
-    const base = `http://localhost:${PORT}`
-    console.log(`\n✅ Server ishga tushdi: ${base}`)
-    console.log(`   🔵 Admin:   ${base}/admin`)
-    console.log(`   🟢 Mentor:  ${base}/mentor`)
-    console.log(`   🟡 Talaba:  ${base}/student`)
-    console.log(`   🔧 API:     ${base}/api`)
-  })
+  app.listen(PORT, "0.0.0.0", () => {
+    const base = `http://localhost:${PORT}`;
+    console.log(`\n✅ Server ishga tushdi: ${base}`);
+    console.log(`   🔵 Admin:   ${base}/admin`);
+    console.log(`   🟢 Mentor:  ${base}/mentor`);
+    console.log(`   🟡 Talaba:  ${base}/student`);
+    console.log(`   🔧 API:     ${base}/api`);
+  });
 
-  const tgOk = !!process.env.TELEGRAM_BOT_TOKEN && !process.env.TELEGRAM_BOT_TOKEN.includes('your_')
-  const aiOk = !!process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_API_KEY.includes('your_')
-  console.log(`\n   MongoDB:   ${db ? '✅ ulangan' : '❌ ulanmagan'}`)
-  console.log(`   Telegram:  ${tgOk ? '✅ sozlangan' : '⚠️  sozlanmagan'}`)
-  console.log(`   AI:        ${aiOk ? '✅ Anthropic' : '➡️  Pollinations (bepul)'}\n`)
+  const tgOk =
+    !!process.env.TELEGRAM_BOT_TOKEN &&
+    !process.env.TELEGRAM_BOT_TOKEN.includes("your_");
+  const aiOk =
+    !!process.env.ANTHROPIC_API_KEY &&
+    !process.env.ANTHROPIC_API_KEY.includes("your_");
+  console.log(`\n   MongoDB:   ${db ? "✅ ulangan" : "❌ ulanmagan"}`);
+  console.log(`   Telegram:  ${tgOk ? "✅ sozlangan" : "⚠️  sozlanmagan"}`);
+  console.log(
+    `   AI:        ${aiOk ? "✅ Anthropic" : "➡️  Pollinations (bepul)"}\n`,
+  );
 }
 
-start().catch(console.error)
+start().catch(console.error);

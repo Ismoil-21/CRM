@@ -254,4 +254,4 @@
   };
 
   console.log('[MentorCoinGive] ✅ v3 Yuklandi');
-})();
+}})
