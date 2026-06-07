@@ -1,0 +1,20 @@
+{
+  "name": "edumanage-crm-backend",
+  "version": "3.0.0",
+  "description": "EduManage CRM \u2014 Express + MongoDB backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "build:all": "bash build.sh",
+    "install:all": "cd ../admin && npm install && cd ../mentor && npm install && cd ../student && npm install"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "mongodb": "^6.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "coins": {
+    "m_Alisher Karimov": 100,
+    "mg_A'zamjonov Abdulfozil_103": 980,
+    "s_104": 10,
+    "s_105": 10
+  },
+  "shop": [],
+  "purchases": [
+    {
+      "id": 1780037033290,
+      "type": "admin-send",
+      "mentorName": "Alisher Karimov",
+      "amount": 100,
+      "reason": "Admin yubordi",
+      "studentCount": 2,
+      "date": "2026-05-29T06:43:53.290Z"
+    },
+    {
+      "id": 1780291361584,
+      "type": "admin-send",
+      "mentorName": "A'zamjonov Abdulfozil",
+      "amount": 1000,
+      "perGroup": 1000,
+      "groupCount": 1,
+      "reason": "Admin yubordi",
+      "studentCount": 5,
+      "date": "2026-06-01T05:22:41.584Z"
+    }
+  ]
+}
