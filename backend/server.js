@@ -30,6 +30,19 @@ if (existsSync(envPath)) {
 const app = express();
 app.use(express.json({ limit: "10mb" }));
 
+// ─── Static fayl cache headers (tezlik uchun) ────────────────────────────────
+app.use((req, res, next) => {
+  const ext = (req.path.split(".").pop() || "").toLowerCase();
+  if (
+    ["js", "css", "ico", "png", "jpg", "webp", "woff2", "woff", "svg"].includes(
+      ext,
+    )
+  ) {
+    res.setHeader("Cache-Control", "public, max-age=86400");
+  }
+  next();
+});
+
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
