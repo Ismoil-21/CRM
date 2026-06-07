@@ -3,12 +3,16 @@ const STORAGE_KEY = "edumanage_crm_v8";
 
 const DEFAULT_DATA = {
   nextId: 100,
-  attendance: {},
-  finance: [],
   courses: [],
   groups: [],
   mentors: [],
   students: [],
+  attendance: {},
+  finance: [],
+  gradingCriteria: {},
+  grades: {},
+  tests: [],
+  testResults: {},
 };
 
 function _mergeData(p) {
@@ -32,14 +36,20 @@ function loadData() {
       return _mergeData(JSON.parse(r));
     }
   } catch (e) {}
-  const d = JSON.parse(JSON.stringify(DEFAULT_DATA));
-  d.attendance = {};
-  d.finance = [];
-  d.gradingCriteria = {};
-  d.grades = {};
-  d.tests = [];
-  d.testResults = {};
-  return d;
+  // localStorage bo'sh — toza holat qaytaramiz, syncFromBackend to'ldiradi
+  return {
+    nextId: 100,
+    courses: [],
+    groups: [],
+    mentors: [],
+    students: [],
+    attendance: {},
+    finance: [],
+    gradingCriteria: {},
+    grades: {},
+    tests: [],
+    testResults: {},
+  };
 }
 // Backend dan yangi ma'lumot olish va appni yangilash
 async function syncFromBackend() {
@@ -108,15 +118,31 @@ function updateStorageBadge(ok) {
 function resetData() {
   if (!confirm("Barcha ma'lumotlar o'chiriladi?")) return;
   localStorage.removeItem(STORAGE_KEY);
-  Object.assign(D, JSON.parse(JSON.stringify(DEFAULT_DATA)));
-  D.attendance = {};
-  D.finance = [];
+  const empty = {
+    nextId: 100,
+    courses: [],
+    groups: [],
+    mentors: [],
+    students: [],
+    attendance: {},
+    finance: [],
+    gradingCriteria: {},
+    grades: {},
+    tests: [],
+    testResults: {},
+  };
+  Object.assign(D, empty);
+  fetch("/api/data", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...empty, _hasUserData: true }),
+  }).catch(() => {});
   groupPage = 1;
   updateCounts();
   updateGroupFilters();
   updateStudentCourseFilter();
   renderAll();
-  toast("🔄 Qayta tiklandi");
+  toast("🔄 Barcha ma'lumotlar o'chirildi");
 }
 if (!window.D) window.D = {};
 var D = window.D;
