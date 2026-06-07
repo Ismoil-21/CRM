@@ -68,97 +68,10 @@ async function connectMongo() {
     await db.collection("kv").createIndex({ key: 1 }, { unique: true });
     await db.collection("users").createIndex({ login: 1 }, { unique: true });
 
-    // Mavjud JSON ma'lumotlarni MongoDB ga ko'chirish
-    await migrateJsonToMongo();
-
     return true;
   } catch (err) {
     console.error("❌ MongoDB ulanmadi:", err.message);
     return false;
-  }
-}
-
-// ─── JSON → MongoDB Migration ─────────────────────────────────────────────────
-async function migrateJsonToMongo() {
-  // crm-data.json migratsiyasi
-  const dataFile = join(__dirname, "crm-data.json");
-  if (existsSync(dataFile)) {
-    try {
-      const data = JSON.parse(readFileSync(dataFile, "utf8"));
-      const existing = await db
-        .collection("crm_data")
-        .findOne({ _type: "main" });
-      if (!existing) {
-        await db
-          .collection("crm_data")
-          .insertOne({ _type: "main", ...data, _migratedAt: new Date() });
-        console.log("📦 crm-data.json → MongoDB (crm_data)");
-      }
-    } catch (e) {
-      console.log("crm-data.json migration skip:", e.message);
-    }
-  }
-
-  // crm-users.json migratsiyasi
-  const usersFile = join(__dirname, "crm-users.json");
-  if (existsSync(usersFile)) {
-    try {
-      const usersData = JSON.parse(readFileSync(usersFile, "utf8"));
-      const existing = await db.collection("users").countDocuments();
-      if (existing === 0) {
-        const allUsers = [];
-        if (Array.isArray(usersData.mentors)) {
-          for (const u of usersData.mentors)
-            allUsers.push({ ...u, _role: "mentor" });
-        }
-        if (Array.isArray(usersData.students)) {
-          for (const u of usersData.students)
-            allUsers.push({ ...u, _role: "student" });
-        }
-        if (allUsers.length > 0) {
-          await db.collection("users").insertMany(allUsers);
-          console.log(`📦 crm-users.json → MongoDB (${allUsers.length} users)`);
-        }
-      }
-    } catch (e) {
-      console.log("crm-users.json migration skip:", e.message);
-    }
-  }
-
-  // crm-coins.json migratsiyasi
-  const coinsFile = join(__dirname, "crm-coins.json");
-  if (existsSync(coinsFile)) {
-    try {
-      const coinsData = JSON.parse(readFileSync(coinsFile, "utf8"));
-      const existing = await db.collection("coins").findOne({ _type: "main" });
-      if (!existing) {
-        await db
-          .collection("coins")
-          .insertOne({ _type: "main", ...coinsData, _migratedAt: new Date() });
-        console.log("📦 crm-coins.json → MongoDB (coins)");
-      }
-    } catch (e) {
-      console.log("crm-coins.json migration skip:", e.message);
-    }
-  }
-
-  // crm-kv.json migratsiyasi
-  const kvFile = join(__dirname, "crm-kv.json");
-  if (existsSync(kvFile)) {
-    try {
-      const kvData = JSON.parse(readFileSync(kvFile, "utf8"));
-      const existing = await db.collection("kv").countDocuments();
-      if (existing === 0 && Object.keys(kvData).length > 0) {
-        const docs = Object.entries(kvData).map(([key, value]) => ({
-          key,
-          value: String(value),
-        }));
-        await db.collection("kv").insertMany(docs);
-        console.log(`📦 crm-kv.json → MongoDB (${docs.length} keys)`);
-      }
-    } catch (e) {
-      console.log("crm-kv.json migration skip:", e.message);
-    }
   }
 }
 

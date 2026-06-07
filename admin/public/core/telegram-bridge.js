@@ -99,6 +99,4 @@
     if (m) scheduleSend(parseInt(m[1], 10));
     return result;
   };
-
-  console.log("[telegram-bridge] active");
 })();
