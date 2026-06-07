@@ -31,18 +31,13 @@ const SCRIPT_GROUPS = [
   ["backend-storage.js", "constants-i18n-ui.js"],
   // Group 2: auth (constants kerak)
   ["auth.js"],
-  // Group 3: qolganlar — parallel (hammasi auth + constants ga bog'liq)
-  [
-    "data-finance.js",
-    "attendance-render.js",
-    "student-dashboard.js",
-    "grading-tests-mentor.js",
-    "student-pages-video.js",
-    "telegram-bridge.js",
-    "ai-assistant.js",
-    "coin-system.js",
-  ],
-  // Group 4: coin-system ga bog'liq
+  // Group 3: data scriptlar — parallel
+  ["data-finance.js", "telegram-bridge.js", "ai-assistant.js"],
+  // Group 4: student-dashboard BIRINCHI (grading uni patch qiladi)
+  ["student-dashboard.js", "attendance-render.js", "coin-system.js"],
+  // Group 5: student-dashboard ga bog'liq — parallel
+  ["grading-tests-mentor.js", "student-pages-video.js"],
+  // Group 6: coin-system va forms — parallel
   ["mentor-coin-give.js", "forms-credentials.js"],
 ];
 
