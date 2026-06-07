@@ -8,21 +8,21 @@ echo "📁 Root: $ROOT"
 echo ""
 echo "📦 Admin portal build qilinmoqda..."
 cd "$ROOT/admin"
-npm install --prefer-offline 2>/dev/null || npm install
+npm install
 VITE_BASE_PATH=/admin/ npm run build
 echo "✅ Admin portal ready"
 
 echo ""
 echo "📦 Mentor portal build qilinmoqda..."
 cd "$ROOT/mentor"
-npm install --prefer-offline 2>/dev/null || npm install
+npm install
 VITE_BASE_PATH=/mentor/ npm run build
 echo "✅ Mentor portal ready"
 
 echo ""
 echo "📦 Talaba portal build qilinmoqda..."
 cd "$ROOT/student"
-npm install --prefer-offline 2>/dev/null || npm install
+npm install
 VITE_BASE_PATH=/student/ npm run build
 echo "✅ Talaba portal ready"
 
