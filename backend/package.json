@@ -1,7 +1,7 @@
 {
   "name": "edumanage-crm-backend",
   "version": "3.0.0",
-  "description": "EduManage CRM \u2014 Express + MongoDB backend",
+  "description": "EduManage CRM — Express + MongoDB backend",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,5 +16,8 @@
   },
   "engines": {
     "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
   }
 }
