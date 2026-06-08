@@ -4252,3 +4252,261 @@ body {
     padding-top: env(safe-area-inset-top);
   }
 }
+/* ============================================================
+   RESPONSIVE COMPREHENSIVE FIX — elementlar tashqariga chiqmasin
+   ============================================================ */
+
+/* Global overflow fix */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Topbar — tashqariga chiqmasin */
+.topbar {
+  max-width: 100%;
+  overflow: hidden;
+}
+.topbar-right {
+  flex-shrink: 0;
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Main area */
+.main {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Scroll area */
+.scroll {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Card grid — tashqariga chiqmasin */
+.card-grid {
+  max-width: 100%;
+}
+
+/* Toolbar — tashqariga chiqmasin */
+.toolbar {
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+.toolbar-row2 {
+  max-width: 100%;
+  flex-wrap: wrap;
+}
+
+/* Modals — overflow */
+.modal {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-body {
+  overflow-y: auto;
+}
+
+/* Finance action bar */
+.fin-action-bar {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Tables — horizontal scroll only inside containers */
+.fin-transactions,
+.list-box,
+.att-body {
+  max-width: 100%;
+}
+
+/* Settings wrap */
+.settings-wrap {
+  max-width: 100%;
+}
+
+/* Buttons in topbar — don't overflow */
+#btn-reset,
+#btn-export {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Student coin topbar — shrink on small screens */
+#student-coin-topbar {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+@media (max-width: 768px) {
+  /* Topbar right items — wrap or hide labels */
+  .topbar {
+    height: auto;
+    min-height: 52px;
+    padding: 8px 12px !important;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  .topbar > div:nth-child(2) {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+  .topbar-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+  .topbar-right {
+    gap: 4px;
+    flex-shrink: 0;
+  }
+  #btn-reset,
+  #btn-export {
+    padding: 5px 8px !important;
+    font-size: 10px !important;
+  }
+  /* Student coin topbar kichikroq */
+  #student-coin-topbar {
+    padding: 4px 10px 4px 8px !important;
+  }
+  #student-coin-amount {
+    font-size: 18px !important;
+  }
+
+  /* Panel content — tashqariga chiqmasin */
+  .panel {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Exp filter pills — wrap qilsin */
+  .exp-filter-group {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* Finance summary */
+  .fin-summary-row {
+    max-width: 100%;
+  }
+
+  /* Month nav — scroll bo'lsin, lekin tashqariga chiqmasin */
+  .fin-month-nav,
+  .att-month-nav {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Grading, tests wrap */
+  .grade-panel-wrap,
+  .tests-panel-wrap {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* Login screen full width */
+  .ls-right {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden;
+  }
+
+  /* Chat wraps */
+  #mentor-chat-wrap,
+  #student-chat-wrap {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  /* AI panel */
+  .ai-panel-container {
+    max-width: 100%;
+  }
+  .ai-bubble {
+    max-width: 95% !important;
+    word-break: break-word;
+  }
+  .ai-bubble-text {
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  /* Dashboard stats row — horizontal scroll instead of overflow */
+  #dash-stats-row {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+
+  /* Coin shop */
+  #panel-coin-shop,
+  #panel-student-coin-shop {
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Very small screens */
+  .topbar-right #btn-reset {
+    display: none; /* Reset tugmasi yashirin kichik ekranda */
+  }
+  #student-coin-topbar {
+    padding: 3px 8px 3px 6px !important;
+  }
+  #student-coin-amount {
+    font-size: 16px !important;
+  }
+  #student-coin-label {
+    display: none !important;
+  }
+
+  /* Dashboard stats 2 column */
+  #dash-stats-row {
+    flex-wrap: wrap !important;
+    overflow-x: hidden;
+  }
+
+  /* Grade/test panels */
+  .grade-top-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .grade-crit-item {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .test-card-top {
+    flex-direction: column;
+  }
+  .test-card-actions {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  /* Form groups */
+  .fg {
+    min-width: 0;
+    max-width: 100%;
+  }
+  input,
+  select,
+  textarea {
+    max-width: 100%;
+  }
+}
