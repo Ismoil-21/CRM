@@ -269,7 +269,7 @@ function renderStudentSchedulePage() {
       <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:14px">${weekLbl}</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">${daysHtml}</div>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-bottom:20px">
+    <div style="display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:20px">
       <div style="background:var(--bg);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:18px 20px;box-shadow:var(--shadow-sm)">
         <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:14px">${groupInfoLbl}</div>
         <div style="display:flex;flex-direction:column;gap:9px;font-size:13px">
