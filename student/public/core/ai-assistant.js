@@ -6,6 +6,7 @@
   // ── Tarjimonlar ──────────────────────────────────────────
   const L = () => (typeof LANG !== 'undefined' ? LANG : 'uz');
 
+  
   const T = {
     uz: {
       title_mentor: '🤖 AI Yordamchi (Mentor)',
