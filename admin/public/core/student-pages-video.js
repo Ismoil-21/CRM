@@ -579,7 +579,7 @@ function renderStudentGradesPage() {
     <!-- Umumiy natija -->
     ${
       filled
-        ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:20px">
+        ? `<div style="display:grid;grid-template-columns:1fr;gap:16px;margin-bottom:20px">
       <div style="background:var(--bg);border:2px solid ${gradeColor};border-radius:var(--r-lg);padding:20px;text-align:center;box-shadow:var(--shadow-sm)">
         <div style="font-size:56px;font-weight:900;color:${gradeColor}">${letter}</div>
         <div style="font-size:11px;color:var(--text3);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:4px">${finalGradeLbl}</div>
