@@ -236,7 +236,7 @@ function renderStudentDashboard() {
     </div>
 
         <!-- Shaxsiy ma'lumotlar + dars jadvali -->
-    <div class="student-info-schedule-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div class="student-info-schedule-grid" style="margin-bottom:20px; margin-top:20px">
       <div style="background:var(--bg);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:18px 20px;box-shadow:var(--shadow-sm)">
         <div style="font-size:14px;font-weight:800;margin-bottom:14px;color:var(--text)">${LANG === "ru" ? "👤 Личные данные" : LANG === "en" ? "👤 Personal Info" : "👤 Shaxsiy ma'lumotlar"}</div>
         <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
