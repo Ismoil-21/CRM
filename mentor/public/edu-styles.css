@@ -3498,9 +3498,6 @@ body * {
   .card-grid {
     grid-template-columns: 1fr !important;
   }
-  .dash-stats-row {
-    grid-template-columns: 1fr 1fr !important;
-  }
   .chart-row {
     grid-template-columns: 1fr !important;
   }
@@ -3588,11 +3585,6 @@ body * {
   }
   .ai-input-row {
     padding: 8px 12px;
-  }
-
-  /* Finance */
-  .fin-summary-row {
-    grid-template-columns: 1fr 1fr !important;
   }
   .fin-action-bar {
     flex-wrap: wrap;
@@ -4085,9 +4077,6 @@ body * {
     flex-wrap: wrap !important;
     overflow-x: visible !important;
   }
-  .pay-info-grid {
-    grid-template-columns: 1fr 1fr !important;
-  }
   .fin-transactions {
     overflow-x: auto !important;
     -webkit-overflow-scrolling: touch;
@@ -4138,12 +4127,6 @@ body * {
   }
   .pay-month-badges {
     flex-wrap: wrap !important;
-  }
-  .theme-grid {
-    grid-template-columns: 1fr 1fr !important;
-  }
-  .font-size-row {
-    grid-template-columns: 1fr 1fr !important;
   }
   .detail-wrap,
   .detail-head {
@@ -4214,11 +4197,6 @@ body * {
   }
   .theme-grid {
     grid-template-columns: 1fr !important;
-  }
-  .dash-stats-row {
-    /* display: grid !important; */
-    /* grid-template-columns: 1fr 1fr !important; */
-    overflow-x: visible !important;
   }
   .coin-lb-row {
     flex-direction: column !important;

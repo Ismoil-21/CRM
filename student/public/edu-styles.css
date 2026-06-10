@@ -3498,9 +3498,6 @@ body * {
   .card-grid {
     grid-template-columns: 1fr !important;
   }
-  .dash-stats-row {
-    grid-template-columns: 1fr 1fr !important;
-  }
   .chart-row {
     grid-template-columns: 1fr !important;
   }
@@ -3588,11 +3585,6 @@ body * {
   }
   .ai-input-row {
     padding: 8px 12px;
-  }
-
-  /* Finance */
-  .fin-summary-row {
-    grid-template-columns: 1fr 1fr !important;
   }
   .fin-action-bar {
     flex-wrap: wrap;
@@ -4109,11 +4101,6 @@ body * {
     overflow-x: visible !important;
   }
 
-  /* Pay info grid: 1 column mobileda */
-  .pay-info-grid {
-    grid-template-columns: 1fr 1fr !important;
-  }
-
   /* Finance tx: scroll bilan ko'rsatilsin */
   .fin-transactions {
     overflow-x: auto !important;
@@ -4187,16 +4174,6 @@ body * {
   }
   .pay-month-badges {
     flex-wrap: wrap !important;
-  }
-
-  /* Settings theme grid */
-  .theme-grid {
-    grid-template-columns: 1fr 1fr !important;
-  }
-
-  /* Font size row 2 columns */
-  .font-size-row {
-    grid-template-columns: 1fr 1fr !important;
   }
 
   /* Detail wrap: avatar + info ustma-ust */
@@ -4280,13 +4257,6 @@ body * {
   /* Theme grid 1 column */
   .theme-grid {
     grid-template-columns: 1fr !important;
-  }
-
-  /* Dash stat cards 1 column */
-  .dash-stats-row {
-    /* display: grid !important; */
-    /* grid-template-columns: 1fr 1fr !important; */
-    overflow-x: visible !important;
   }
 
   /* Coin leaderboard items ustma-ust */
