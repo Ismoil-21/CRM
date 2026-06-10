@@ -4256,3 +4256,10 @@ body * {
 /* ============================================================
    END MOBILE RESPONSIVE PATCH
    ============================================================ */
+
+/* Shaxsiy ma'lumotlar + Dars jadvali: mobileda ustma-ust */
+@media (max-width: 768px) {
+  .student-info-schedule-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
