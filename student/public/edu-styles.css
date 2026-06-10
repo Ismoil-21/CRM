@@ -4284,8 +4284,8 @@ body * {
 
   /* Dash stat cards 1 column */
   .dash-stats-row {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
+    /* display: grid !important; */
+    /* grid-template-columns: 1fr 1fr !important; */
     overflow-x: visible !important;
   }
 
